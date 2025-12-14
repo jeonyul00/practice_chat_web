@@ -112,3 +112,65 @@ export const Chats = styled.div`
   flex: 1;
   background: white;
 `;
+
+export const ProfileModal = styled.div`
+  display: flex;
+  padding: 20px;
+  align-items: center;
+  gap: 12px;
+
+  & img {
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+  }
+
+  & > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    & #profile-name {
+      font-weight: bold;
+      font-size: 15px;
+      color: #1d1c1d;
+    }
+
+    & #profile-active {
+      font-size: 13px;
+      color: #616061;
+    }
+  }
+`;
+
+export const WorkspaceModal = styled.div`
+  padding: 20px;
+  min-width: 200px;
+
+  & h2 {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 16px;
+    color: #1d1c1d;
+  }
+
+  & button {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 14px;
+
+    &:hover {
+      background: #f8f8f8;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+`;

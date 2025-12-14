@@ -17,7 +17,7 @@ function App() {
           path="/"
           element={
             user ? (
-              <Navigate to="/workspace/channel/general" />
+              <Navigate to="/workspace/sleact/channel/general" replace />
             ) : (
               <Navigate to="/login" />
             )
@@ -25,7 +25,7 @@ function App() {
         />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/workspace/*" element={<Workspace />} />
+        <Route path="/workspace/:workspace/*" element={<Workspace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
