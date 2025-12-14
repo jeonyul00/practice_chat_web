@@ -131,9 +131,11 @@ const Workspace = () => {
   const handleGetWorkspaceList = async () => {
     try {
       const data = await getWorkspaceList();
-      setWorkspaceList(data);
+      console.log("워크스페이스 목록:", data);
+      setWorkspaceList(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("워크스페이스 목록 조회 실패:", error);
+      setWorkspaceList([]);
     }
   };
 

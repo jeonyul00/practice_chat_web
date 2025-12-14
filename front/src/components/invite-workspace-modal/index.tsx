@@ -1,6 +1,7 @@
 import Modal from "../modal";
 import { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
+import { inviteWorkspaceMember } from "../../apis/workspace";
 import { Button, Input, Label } from "./styles";
 
 interface Props {
@@ -30,14 +31,17 @@ const InviteWorkspaceModal = ({
       if (!newMember || !newMember.trim() || !workspace) return;
 
       try {
-        // TODO: API 연결
-        console.log("Invite member:", newMember, "to workspace:", workspace);
+        await inviteWorkspaceMember(workspace, newMember);
         setNewMember("");
         setShowInviteWorkspaceModal(false);
-        alert("초대 기능은 추후 구현 예정입니다.");
-      } catch (error) {
+        alert("사용자를 성공적으로 초대했습니다!");
+      } catch (error: any) {
         console.error("멤버 초대 실패:", error);
-        alert("멤버 초대에 실패했습니다.");
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data ||
+          "멤버 초대에 실패했습니다.";
+        alert(errorMessage);
       }
     },
     [newMember, workspace, setShowInviteWorkspaceModal]

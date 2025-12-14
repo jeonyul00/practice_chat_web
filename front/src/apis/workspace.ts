@@ -12,3 +12,13 @@ export const createWorkspace = async (data: {
   const response = await api.post(`/workspaces`, data);
   return response.data;
 };
+
+export const inviteWorkspaceMember = async (
+  workspace: string,
+  email: string
+) => {
+  const response = await api.post(`/workspaces/${workspace}/members`, {
+    email,
+  });
+  return response.data;
+};
