@@ -1,12 +1,12 @@
 import {
   AddButton,
   Channels,
+  ChannelHeader,
   Chats,
   Header,
   MenuScroll,
   ProfileImg,
   ProfileModal,
-  RightMenu,
   WorkspaceButton,
   WorkspaceName,
   Workspaces,
@@ -220,34 +220,7 @@ const Workspace = () => {
 
   return (
     <div>
-      <Header>
-        <RightMenu>
-          <span onClick={onClickUserProfile}>
-            <ProfileImg
-              src="https://gravatar.com/avatar/placeholder?s=28&d=retro"
-              alt="profile"
-            />
-            {showUserMenu && (
-              <Menu
-                style={{ right: 0, top: 38 }}
-                show={showUserMenu}
-                onCloseModal={onClickUserProfile}
-              >
-                <ProfileModal>
-                  <img
-                    src="https://gravatar.com/avatar/placeholder?s=28&d=retro"
-                    alt="profile"
-                  />
-                  <div>
-                    <span id="profile-name">{user?.nickname}</span>
-                    <span id="profile-active">Active</span>
-                  </div>
-                </ProfileModal>
-              </Menu>
-            )}
-          </span>
-        </RightMenu>
-      </Header>
+      <Header />
       <WorkspaceWrapper>
         <Workspaces>
           {workspaceList.map((workspace) => (
@@ -261,9 +234,35 @@ const Workspace = () => {
           <AddButton onClick={onClickCreateWorkspace}>+</AddButton>
         </Workspaces>
         <Channels>
-          <WorkspaceName onClick={toggleWorkspaceModal}>
-            {workspaceList?.find((v) => v.url === workspace)?.name}
-          </WorkspaceName>
+          <ChannelHeader>
+            <WorkspaceName onClick={toggleWorkspaceModal}>
+              {workspaceList?.find((v) => v.url === workspace)?.name}
+            </WorkspaceName>
+            <span onClick={onClickUserProfile} style={{ position: 'relative' }}>
+              <ProfileImg
+                src="https://gravatar.com/avatar/placeholder?s=28&d=retro"
+                alt="profile"
+              />
+              {showUserMenu && (
+                <Menu
+                  style={{ right: 0, top: 50 }}
+                  show={showUserMenu}
+                  onCloseModal={onClickUserProfile}
+                >
+                  <ProfileModal>
+                    <img
+                      src="https://gravatar.com/avatar/placeholder?s=28&d=retro"
+                      alt="profile"
+                    />
+                    <div>
+                      <span id="profile-name">{user?.nickname}</span>
+                      <span id="profile-active">Active</span>
+                    </div>
+                  </ProfileModal>
+                </Menu>
+              )}
+            </span>
+          </ChannelHeader>
           <MenuScroll>
             <Menu
               show={showWorkspaceModal}
