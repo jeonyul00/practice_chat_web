@@ -3,9 +3,11 @@ import { useParams } from "react-router-dom";
 import ChatBox from "../../components/chat-box";
 import { getChannelChats, postChannelChat } from "../../apis/channel";
 import SimpleBar from "simplebar-react";
+import type SimpleBarCore from "simplebar-core";
 import "simplebar-react/dist/simplebar.min.css";
 import dayjs from "dayjs";
 import { makeSection } from "../../utils/makeSection";
+import useSocket from "../../hooks/useSocket";
 import {
   Header,
   Container,
@@ -42,7 +44,8 @@ const Channel = () => {
   const [isLoading, setIsLoading] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
   const isLoadingRef = useRef(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollbarRef = useRef<SimpleBarCore>(null);
+  const [socket] = useSocket(workspace);
 
   const chatSections = makeSection(chats);
 
@@ -92,6 +95,16 @@ const Channel = () => {
         await fetchChats(1, true);
         setPage(1);
         setHasMore(true);
+
+        // 스크롤을 맨 아래로
+        setTimeout(() => {
+          if (scrollbarRef.current) {
+            const scrollElement = scrollbarRef.current.getScrollElement();
+            if (scrollElement) {
+              scrollElement.scrollTop = scrollElement.scrollHeight;
+            }
+          }
+        }, 100);
       } catch (error) {
         console.error("메시지 전송 실패:", error);
         alert("메시지 전송에 실패했습니다.");
@@ -105,7 +118,6 @@ const Channel = () => {
     setPage(1);
     setHasMore(true);
     fetchChats(1, true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspace, channel]);
 
   // Intersection Observer로 무한 스크롤 구현
@@ -135,6 +147,50 @@ const Channel = () => {
     };
   }, [hasMore, isLoading, page, fetchChats]);
 
+  // 소켓 메시지 구독
+  useEffect(() => {
+    if (!socket || !workspace || !channel) return;
+
+    const destination = `/sub/channel/${channel}`;
+
+    socket.on(destination, (newChat: Chat) => {
+      console.log("📩 새 메시지 수신:", newChat);
+      setChats((prevChats) => [...prevChats, newChat]);
+
+      // 스크롤을 맨 아래로 이동
+      setTimeout(() => {
+        if (scrollbarRef.current) {
+          const scrollElement = scrollbarRef.current.getScrollElement();
+          if (scrollElement) {
+            const { scrollHeight, clientHeight, scrollTop } = scrollElement;
+            // 스크롤이 맨 아래에서 150px 이내면 자동으로 맨 아래로
+            if (scrollHeight < clientHeight + scrollTop + 150) {
+              scrollElement.scrollTop = scrollElement.scrollHeight;
+            }
+          }
+        }
+      }, 100);
+    });
+
+    return () => {
+      socket.off(destination);
+    };
+  }, [socket, workspace, channel]);
+
+  // 초기 로드 시 스크롤을 맨 아래로
+  useEffect(() => {
+    if (chats.length > 0 && scrollbarRef.current) {
+      setTimeout(() => {
+        if (scrollbarRef.current) {
+          const scrollElement = scrollbarRef.current.getScrollElement();
+          if (scrollElement) {
+            scrollElement.scrollTop = scrollElement.scrollHeight;
+          }
+        }
+      }, 100);
+    }
+  }, [chats.length]);
+
   return (
     <Container>
       <Header>
@@ -161,7 +217,7 @@ const Channel = () => {
         </div>
       </Header>
       <ChatArea>
-        <SimpleBar style={{ height: "100%" }}>
+        <SimpleBar style={{ height: "100%" }} ref={scrollbarRef}>
           <ChatList>
             {/* 무한 스크롤 트리거 (맨 위) */}
             <div

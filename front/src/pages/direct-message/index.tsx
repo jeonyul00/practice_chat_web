@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import ChatBox from "../../components/chat-box";
 import { getDMChats, postDMChat } from "../../apis/channel";
 import SimpleBar from "simplebar-react";
+import type SimpleBarCore from "simplebar-core";
 import "simplebar-react/dist/simplebar.min.css";
 import dayjs from "dayjs";
 import {
@@ -19,6 +20,8 @@ import {
   SectionDate,
 } from "./styles";
 import { makeSection } from "../../utils/makeSection";
+import useSocket from "../../hooks/useSocket";
+import { useAuthStore } from "../../store";
 
 interface Chat {
   id: number;
@@ -46,8 +49,10 @@ const DirectMessage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
   const isLoadingRef = useRef(false);
-
+  const scrollbarRef = useRef<SimpleBarCore>(null);
   const chatSections = makeSection(chats);
+  const [socket] = useSocket(workspace);
+  const { user } = useAuthStore();
 
   const fetchChats = useCallback(
     async (pageNum: number = 1, isInitial: boolean = false) => {
@@ -95,6 +100,16 @@ const DirectMessage = () => {
         await fetchChats(1, true);
         setPage(1);
         setHasMore(true);
+
+        // 스크롤을 맨 아래로
+        setTimeout(() => {
+          if (scrollbarRef.current) {
+            const scrollElement = scrollbarRef.current.getScrollElement();
+            if (scrollElement) {
+              scrollElement.scrollTop = scrollElement.scrollHeight;
+            }
+          }
+        }, 100);
       } catch (error) {
         console.error("메시지 전송 실패:", error);
         alert("메시지 전송에 실패했습니다.");
@@ -103,12 +118,42 @@ const DirectMessage = () => {
     [workspace, id, fetchChats]
   );
 
+  const onMessage = useCallback(
+    (data: Chat) => {
+      const isMyMessage =
+        data.SenderId === user?.id && data.ReceiverId === Number(id);
+      const isOtherMessage =
+        data.SenderId === Number(id) && data.ReceiverId === user?.id;
+
+      if (isMyMessage || isOtherMessage) {
+        setChats((prev) => {
+          const exists = prev.some((chat) => chat.id === data.id);
+          if (exists) return prev;
+          return [...prev, data];
+        });
+
+        setTimeout(() => {
+          if (scrollbarRef.current) {
+            const scrollElement = scrollbarRef.current.getScrollElement();
+            if (scrollElement) {
+              const { scrollHeight, clientHeight, scrollTop } = scrollElement;
+              // 스크롤이 맨 아래에서 150px 이내면 자동으로 맨 아래로
+              if (scrollHeight < clientHeight + scrollTop + 150) {
+                scrollElement.scrollTop = scrollElement.scrollHeight;
+              }
+            }
+          }
+        }, 500);
+      }
+    },
+    [id, user]
+  );
+
   // 초기 로드
   useEffect(() => {
     setPage(1);
     setHasMore(true);
     fetchChats(1, true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspace, id]);
 
   // Intersection Observer로 무한 스크롤 구현
@@ -138,13 +183,41 @@ const DirectMessage = () => {
     };
   }, [hasMore, isLoading, page, fetchChats]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const destination = "/sub/dm";
+    console.log("🔔 DM 구독 시작:", destination);
+
+    socket.on(destination, onMessage);
+
+    return () => {
+      console.log("🔕 DM 구독 해제:", destination);
+      socket.off(destination);
+    };
+  }, [socket, onMessage]);
+
+  // 초기 로드 시 스크롤을 맨 아래로
+  useEffect(() => {
+    if (chats.length > 0 && scrollbarRef.current) {
+      setTimeout(() => {
+        if (scrollbarRef.current) {
+          const scrollElement = scrollbarRef.current.getScrollElement();
+          if (scrollElement) {
+            scrollElement.scrollTop = scrollElement.scrollHeight;
+          }
+        }
+      }, 100);
+    }
+  }, [chats.length]);
+
   return (
     <Container>
       <Header>
         <h2>Direct Message</h2>
       </Header>
       <ChatArea>
-        <SimpleBar style={{ height: "100%" }}>
+        <SimpleBar style={{ height: "100%" }} ref={scrollbarRef}>
           <ChatList>
             {/* 무한 스크롤 트리거 (맨 위) */}
             <div

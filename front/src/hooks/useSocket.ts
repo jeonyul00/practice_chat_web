@@ -47,6 +47,7 @@ const createSocketClient = (workspace: string): SocketClient => {
 
   // 4️⃣ 서버가 메시지 보내면 실행
   sock.onmessage = (event) => {
+    console.log("test eee : ", event);
     try {
       const message = JSON.parse(event.data);
       const { type, destination, body, payload } = message;
