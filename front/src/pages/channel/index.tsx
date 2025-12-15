@@ -2,6 +2,9 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import ChatBox from "../../components/chat-box";
 import { getChannelChats, postChannelChat } from "../../apis/channel";
+import SimpleBar from "simplebar-react";
+import "simplebar-react/dist/simplebar.min.css";
+import dayjs from "dayjs";
 import {
   Header,
   Container,
@@ -89,33 +92,30 @@ const Channel = () => {
         </div>
       </Header>
       <ChatArea>
-        <ChatList>
-          {chats.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "20px", color: "#666" }}>
-              메시지가 없습니다. 첫 메시지를 보내보세요!
-            </div>
-          ) : (
-            chats.map((chat) => (
-              <ChatItem key={chat.id}>
-                <Avatar>
-                  {(chat.User?.nickname || "U").charAt(0).toUpperCase()}
-                </Avatar>
-                <ChatContent>
-                  <ChatInfo>
-                    <strong>{chat.User?.nickname || "Unknown"}</strong>
-                    <span>
-                      {new Date(chat.createdAt).toLocaleTimeString("ko-KR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  </ChatInfo>
-                  <ChatText>{chat.content}</ChatText>
-                </ChatContent>
-              </ChatItem>
-            ))
-          )}
-        </ChatList>
+        <SimpleBar style={{ height: "100%" }}>
+          <ChatList>
+            {chats.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "20px", color: "#666" }}>
+                메시지가 없습니다. 첫 메시지를 보내보세요!
+              </div>
+            ) : (
+              chats.map((chat) => (
+                <ChatItem key={chat.id}>
+                  <Avatar>
+                    {(chat.User?.nickname || "U").charAt(0).toUpperCase()}
+                  </Avatar>
+                  <ChatContent>
+                    <ChatInfo>
+                      <strong>{chat.User?.nickname || "Unknown"}</strong>
+                      <span>{dayjs(chat.createdAt).format("A h:mm")}</span>
+                    </ChatInfo>
+                    <ChatText>{chat.content}</ChatText>
+                  </ChatContent>
+                </ChatItem>
+              ))
+            )}
+          </ChatList>
+        </SimpleBar>
       </ChatArea>
       <ChatBox onSubmitForm={onSubmitForm} placeholder="메시지를 입력하세요" />
     </Container>
