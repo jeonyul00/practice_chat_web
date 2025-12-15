@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import { login as loginAPI, signup as signupAPI } from "../apis/auth";
 
 interface User {
+  id: number;
   email: string;
   nickname: string;
 }

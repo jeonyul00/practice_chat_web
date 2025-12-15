@@ -35,6 +35,7 @@ import {
   createWorkspace,
   getWorkspaceMembers,
 } from "../../apis/workspace";
+import useSocket from "../../hooks/useSocket";
 
 interface WorkspaceType {
   id: number;
@@ -62,8 +63,12 @@ const Workspace = () => {
   const [showCreateChannelModal, setShowCreateChannelModal] = useState(false);
   const [showInviteWorkspaceModal, setShowInviteWorkspaceModal] =
     useState(false);
-
   const [members, setMembers] = useState<MemberType[]>([]);
+  const [onlineUsers, setOnlineUsers] = useState<number[]>([]);
+
+  // 🔌 WebSocket 연결
+  // workspace가 바뀌면 자동으로 새로운 소켓 반환
+  const [socket, disconnect] = useSocket(workspace);
 
   const onClickUserProfile = () => {
     setShowUserMenu((prev) => !prev);
@@ -167,11 +172,51 @@ const Workspace = () => {
     handleGetWorkspaceList();
   }, []);
 
+  // 🔄 workspace 변경 시 처리
   useEffect(() => {
+    // workspace가 있으면 멤버 목록 가져오기
     if (workspace) {
       handleGetMembers();
     }
+
+    // cleanup: workspace 바뀔 때만 소켓 정리
+    const currentWorkspace = workspace;
+    return () => {
+      if (currentWorkspace) {
+        disconnect();
+      }
+    };
   }, [workspace]);
+
+  // 🔌 소켓 연결 시 로그인 정보 전송 및 구독
+  useEffect(() => {
+    if (!socket || !user) return;
+
+    console.log("🔌 소켓 구독 시작");
+
+    // 1️⃣ 먼저 구독 등록 (메시지를 받을 준비)
+    socket.on("/sub/onlineList", (data) => {
+      console.log("👥 온라인 유저 목록:", data);
+      setOnlineUsers(data); // 온라인 유저 목록 업데이트
+    });
+
+    socket.on("/sub/hello", (data) => {
+      console.log("👋 환영 메시지:", data);
+    });
+
+    // 2️⃣ 구독 등록 후 로그인 메시지 전송
+    console.log("🚀 로그인 메시지 전송:", user.id);
+    socket.send("SEND", {
+      destination: `/pub/login/${user.id}`,
+      body: JSON.stringify({ id: user.id, channels: [] }),
+    });
+
+    // cleanup: 구독만 해제 (소켓 자체는 유지)
+    return () => {
+      socket.off("/sub/onlineList");
+      socket.off("/sub/hello");
+    };
+  }, [socket, user]);
 
   return (
     <div>
@@ -332,7 +377,7 @@ const Workspace = () => {
               </WorkspaceModal>
             </Menu>
             <ChannelList />
-            <DMList />
+            <DMList onlineUsers={onlineUsers} />
           </MenuScroll>
         </Channels>
         <Chats>

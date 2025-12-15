@@ -300,10 +300,14 @@ router.post(
           },
         ],
       });
-      const io = req.app.get("io");
-      io.of(`/ws-${workspace.url}`)
-        .to(`/ws-${workspace.url}-${channel.id}`)
-        .emit("message", chatWithUser);
+      const broadcast = req.app.get("broadcast");
+      if (broadcast) {
+        broadcast(
+          workspace.url,
+          `/sub/channel/${channel.name}`,
+          chatWithUser
+        );
+      }
       res.send("ok");
     } catch (error) {
       next(error);
@@ -369,10 +373,14 @@ router.post(
             },
           ],
         });
-        const io = req.app.get("io");
-        io.of(`/ws-${workspace.url}`)
-          .to(`/ws-${workspace.url}-${channel.id}`)
-          .emit("message", chatWithUser);
+        const broadcast = req.app.get("broadcast");
+        if (broadcast) {
+          broadcast(
+            workspace.url,
+            `/sub/channel/${channel.name}`,
+            chatWithUser
+          );
+        }
       }
       res.send("ok");
     } catch (error) {
@@ -457,9 +465,6 @@ router.get(
   }
 );
 
-function getKeyByValue(object, value) {
-  return Object.keys(object).find((key) => object[key] === value);
-}
 router.post(
   "/workspaces/:workspace/dms/:id/chats",
   isLoggedIn,
@@ -488,20 +493,14 @@ router.post(
           },
         ],
       });
-      const io = req.app.get("io");
-      const onlineMap = req.app.get("onlineMap");
-      const workspaceOnlineMap = onlineMap[`/ws-${workspace.url}`];
-
-      if (workspaceOnlineMap) {
-        const receiverSocketId = getKeyByValue(
-          workspaceOnlineMap,
-          Number(ReceiverId)
+      const sendToUser = req.app.get("sendToUser");
+      if (sendToUser) {
+        sendToUser(
+          workspace.url,
+          Number(ReceiverId),
+          "/sub/dm",
+          dmWithSender
         );
-        if (receiverSocketId) {
-          io.of(`/ws-${workspace.url}`)
-            .to(receiverSocketId)
-            .emit("dm", dmWithSender);
-        }
       }
       res.send("ok");
     } catch (error) {
@@ -540,15 +539,15 @@ router.post(
             },
           ],
         });
-        const io = req.app.get("io");
-        const onlineMap = req.app.get("onlineMap");
-        const receiverSocketId = getKeyByValue(
-          onlineMap[`/ws-${workspace.url}`],
-          Number(ReceiverId)
-        );
-        io.of(`/ws-${workspace.url}`)
-          .to(receiverSocketId)
-          .emit("dm", dmWithSender);
+        const sendToUser = req.app.get("sendToUser");
+        if (sendToUser) {
+          sendToUser(
+            workspace.url,
+            Number(ReceiverId),
+            "/sub/dm",
+            dmWithSender
+          );
+        }
       }
       res.send("ok");
     } catch (error) {

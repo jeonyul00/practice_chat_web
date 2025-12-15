@@ -9,7 +9,11 @@ interface Member {
   email: string;
 }
 
-const DMList = () => {
+interface DMListProps {
+  onlineUsers: number[];
+}
+
+const DMList = ({ onlineUsers }: DMListProps) => {
   const { workspace } = useParams<{ workspace: string }>();
   const navigate = useNavigate();
   const [channelCollapse, setChannelCollapse] = useState(false);
@@ -54,21 +58,33 @@ const DMList = () => {
             {members.length === 0 ? (
               <EmptyMessage>멤버가 없습니다.</EmptyMessage>
             ) : (
-              members.map((member) => (
-                <div
-                  key={member.id}
-                  onClick={() => onClickMember(member.id)}
-                  style={{
-                    padding: "8px 16px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  <span style={{ marginRight: "8px" }}>👤</span>
-                  <span>{member.nickname}</span>
-                </div>
-              ))
+              members.map((member) => {
+                const isOnline = onlineUsers.includes(member.id);
+                return (
+                  <div
+                    key={member.id}
+                    onClick={() => onClickMember(member.id)}
+                    style={{
+                      padding: "8px 16px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span
+                      style={{
+                        marginRight: "8px",
+                        marginLeft: "28px",
+                        color: isOnline ? "#2ecc71" : "#95a5a6",
+                        fontSize: "12px",
+                      }}
+                    >
+                      ●
+                    </span>
+                    <span>{member.nickname}</span>
+                  </div>
+                );
+              })
             )}
           </>
         )}

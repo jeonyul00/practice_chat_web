@@ -12,6 +12,7 @@ interface SignupForm {
 }
 
 interface AuthResponse {
+  id: number;
   email: string;
   nickname: string;
 }
@@ -22,9 +23,9 @@ export const login = async (form: LoginForm): Promise<AuthResponse> => {
 };
 
 export const signup = async (form: SignupForm): Promise<AuthResponse> => {
-  const response = await api.post("/users", form);
+  const response = await api.post<AuthResponse>("/users", form);
   if (response.status >= 200 && response.status < 300) {
-    return { email: form.email, nickname: form.nickname };
+    return response.data;
   }
   throw new Error("회원가입 실패");
 };

@@ -17,6 +17,7 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
+    "express-ws": "^5.0.2",
     "helmet": "^4.4.1",
     "hpp": "^0.2.3",
     "morgan": "^1.10.0",
@@ -28,6 +29,9 @@
     "pm2": "^4.5.4",
     "sequelize": "^6.5.0",
     "sequelize-cli": "^6.2.0",
-    "socket.io": "^4.5.4"
+    "socket.io": "^4.5.4",
+    "sockjs": "^0.3.24",
+    "stompjs": "^2.3.3",
+    "ws": "^8.18.3"
   }
 }
