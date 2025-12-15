@@ -1,14 +1,43 @@
-import { useParams } from "react-router-dom";
-import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { CollapseButton, SectionHeader, EmptyMessage } from "./styles";
+import { getWorkspaceMembers } from "../../apis/workspace";
+
+interface Member {
+  id: number;
+  nickname: string;
+  email: string;
+}
 
 const DMList = () => {
   const { workspace } = useParams<{ workspace: string }>();
+  const navigate = useNavigate();
   const [channelCollapse, setChannelCollapse] = useState(false);
+  const [members, setMembers] = useState<Member[]>([]);
 
   const toggleChannelCollapse = () => {
     setChannelCollapse((prev) => !prev);
   };
+
+  const onClickMember = (id: number) => {
+    navigate(`/workspace/${workspace}/dm/${id}`);
+  };
+
+  useEffect(() => {
+    if (!workspace) return;
+
+    const fetchMembers = async () => {
+      try {
+        const data = await getWorkspaceMembers(workspace);
+        setMembers(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("멤버 목록 조회 실패:", error);
+        setMembers([]);
+      }
+    };
+
+    fetchMembers();
+  }, [workspace]);
 
   return (
     <>
@@ -21,7 +50,27 @@ const DMList = () => {
       </SectionHeader>
       <div>
         {!channelCollapse && (
-          <EmptyMessage>DM 목록은 추후 구현 예정입니다.</EmptyMessage>
+          <>
+            {members.length === 0 ? (
+              <EmptyMessage>멤버가 없습니다.</EmptyMessage>
+            ) : (
+              members.map((member) => (
+                <div
+                  key={member.id}
+                  onClick={() => onClickMember(member.id)}
+                  style={{
+                    padding: "8px 16px",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <span style={{ marginRight: "8px" }}>👤</span>
+                  <span>{member.nickname}</span>
+                </div>
+              ))
+            )}
+          </>
         )}
       </div>
     </>

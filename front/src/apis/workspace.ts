@@ -22,3 +22,8 @@ export const inviteWorkspaceMember = async (
   });
   return response.data;
 };
+
+export const getWorkspaceMembers = async (workspace: string) => {
+  const response = await api.get(`/workspaces/${workspace}/members`);
+  return response.data;
+};

@@ -490,13 +490,19 @@ router.post(
       });
       const io = req.app.get("io");
       const onlineMap = req.app.get("onlineMap");
-      const receiverSocketId = getKeyByValue(
-        onlineMap[`/ws-${workspace.url}`],
-        Number(ReceiverId)
-      );
-      io.of(`/ws-${workspace.url}`)
-        .to(receiverSocketId)
-        .emit("dm", dmWithSender);
+      const workspaceOnlineMap = onlineMap[`/ws-${workspace.url}`];
+
+      if (workspaceOnlineMap) {
+        const receiverSocketId = getKeyByValue(
+          workspaceOnlineMap,
+          Number(ReceiverId)
+        );
+        if (receiverSocketId) {
+          io.of(`/ws-${workspace.url}`)
+            .to(receiverSocketId)
+            .emit("dm", dmWithSender);
+        }
+      }
       res.send("ok");
     } catch (error) {
       next(error);

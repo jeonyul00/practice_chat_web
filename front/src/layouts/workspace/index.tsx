@@ -30,12 +30,22 @@ import ChannelList from "../../components/channel-list";
 import DMList from "../../components/dm-list";
 import { useEffect, useState, useCallback } from "react";
 import { useAuthStore } from "../../store";
-import { getWorkspaceList, createWorkspace } from "../../apis/workspace";
+import {
+  getWorkspaceList,
+  createWorkspace,
+  getWorkspaceMembers,
+} from "../../apis/workspace";
 
 interface WorkspaceType {
   id: number;
   name: string;
   url: string;
+}
+
+interface MemberType {
+  id: number;
+  nickname: string;
+  email: string;
 }
 
 const Workspace = () => {
@@ -52,6 +62,8 @@ const Workspace = () => {
   const [showCreateChannelModal, setShowCreateChannelModal] = useState(false);
   const [showInviteWorkspaceModal, setShowInviteWorkspaceModal] =
     useState(false);
+
+  const [members, setMembers] = useState<MemberType[]>([]);
 
   const onClickUserProfile = () => {
     setShowUserMenu((prev) => !prev);
@@ -139,9 +151,27 @@ const Workspace = () => {
     }
   };
 
+  const handleGetMembers = async () => {
+    if (!workspace) return;
+
+    try {
+      const data = await getWorkspaceMembers(workspace);
+      setMembers(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error("멤버 목록 조회 실패:", e);
+      setMembers([]);
+    }
+  };
+
   useEffect(() => {
     handleGetWorkspaceList();
   }, []);
+
+  useEffect(() => {
+    if (workspace) {
+      handleGetMembers();
+    }
+  }, [workspace]);
 
   return (
     <div>
@@ -202,6 +232,103 @@ const Workspace = () => {
                 </button>
                 <button onClick={onClickAddChannel}>채널 만들기</button>
                 <button onClick={onLogOut}>로그아웃</button>
+
+                <div
+                  style={{
+                    marginTop: "20px",
+                    paddingTop: "20px",
+                    borderTop: "1px solid #e0e0e0",
+                  }}
+                >
+                  <h3
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "bold",
+                      marginBottom: "12px",
+                      color: "#1d1c1d",
+                    }}
+                  >
+                    멤버 ({members.length})
+                  </h3>
+                  <div
+                    style={{
+                      maxHeight: "200px",
+                      overflowY: "auto",
+                    }}
+                  >
+                    {members.length === 0 ? (
+                      <div
+                        style={{
+                          padding: "12px",
+                          color: "#616061",
+                          fontSize: "13px",
+                          textAlign: "center",
+                        }}
+                      >
+                        멤버가 없습니다
+                      </div>
+                    ) : (
+                      members.map((member) => (
+                        <div
+                          key={member.id}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            padding: "8px 12px",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            transition: "background-color 0.2s",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = "#f8f8f8";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor =
+                              "transparent";
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "4px",
+                              backgroundColor: "#007a5a",
+                              color: "white",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "14px",
+                              fontWeight: "bold",
+                              marginRight: "12px",
+                            }}
+                          >
+                            {member.nickname.charAt(0).toUpperCase()}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div
+                              style={{
+                                fontSize: "14px",
+                                fontWeight: "500",
+                                color: "#1d1c1d",
+                                marginBottom: "2px",
+                              }}
+                            >
+                              {member.nickname}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "#616061",
+                              }}
+                            >
+                              {member.email}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
               </WorkspaceModal>
             </Menu>
             <ChannelList />
