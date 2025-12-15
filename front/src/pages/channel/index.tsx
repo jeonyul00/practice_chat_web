@@ -41,13 +41,16 @@ const Channel = () => {
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
+  const isLoadingRef = useRef(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const chatSections = makeSection(chats);
 
   const fetchChats = useCallback(
     async (pageNum: number = 1, isInitial: boolean = false) => {
-      if (!workspace || !channel || isLoading) return;
+      if (!workspace || !channel || isLoadingRef.current) return;
 
+      isLoadingRef.current = true;
       setIsLoading(true);
       try {
         const data = await getChannelChats(workspace, channel, 20, pageNum);
@@ -69,11 +72,14 @@ const Channel = () => {
         if (isInitial) {
           setChats([]);
         }
+        // 에러 발생 시 더 이상 로드하지 않음
+        setHasMore(false);
       } finally {
+        isLoadingRef.current = false;
         setIsLoading(false);
       }
     },
-    [workspace, channel, isLoading]
+    [workspace, channel]
   );
 
   const onSubmitForm = useCallback(
@@ -99,6 +105,7 @@ const Channel = () => {
     setPage(1);
     setHasMore(true);
     fetchChats(1, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspace, channel]);
 
   // Intersection Observer로 무한 스크롤 구현
@@ -177,7 +184,9 @@ const Channel = () => {
               </div>
             )}
             {chats.length === 0 && !isLoading ? (
-              <div style={{ textAlign: "center", padding: "20px", color: "#666" }}>
+              <div
+                style={{ textAlign: "center", padding: "20px", color: "#666" }}
+              >
                 메시지가 없습니다. 첫 메시지를 보내보세요!
               </div>
             ) : (

@@ -29,8 +29,7 @@ export const makeSection = <T extends Chat>(chatList: T[]) => {
 
   // 최신순으로 정렬 (createdAt 기준 오름차순)
   const sortedChats = [...chatList].sort(
-    (a, b) =>
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
   );
 
   sortedChats.forEach((chat) => {

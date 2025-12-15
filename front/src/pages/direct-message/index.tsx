@@ -45,13 +45,15 @@ const DirectMessage = () => {
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
+  const isLoadingRef = useRef(false);
 
   const chatSections = makeSection(chats);
 
   const fetchChats = useCallback(
     async (pageNum: number = 1, isInitial: boolean = false) => {
-      if (!workspace || !id || isLoading) return;
+      if (!workspace || !id || isLoadingRef.current) return;
 
+      isLoadingRef.current = true;
       setIsLoading(true);
       try {
         const data = await getDMChats(workspace, Number(id), 20, pageNum);
@@ -73,11 +75,14 @@ const DirectMessage = () => {
         if (isInitial) {
           setChats([]);
         }
+        // 에러 발생 시 더 이상 로드하지 않음
+        setHasMore(false);
       } finally {
+        isLoadingRef.current = false;
         setIsLoading(false);
       }
     },
-    [workspace, id, isLoading]
+    [workspace, id]
   );
 
   const onSubmitForm = useCallback(
@@ -103,6 +108,7 @@ const DirectMessage = () => {
     setPage(1);
     setHasMore(true);
     fetchChats(1, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspace, id]);
 
   // Intersection Observer로 무한 스크롤 구현
